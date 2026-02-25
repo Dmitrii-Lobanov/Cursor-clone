@@ -1,4 +1,15 @@
-import { clerkMiddleware } from '@clerk/nextjs/server';
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+
+// Used for automatic redirect to the sign in page
+// const isPublicRoute = createRouteMatcher([
+//   '/api/inngest(.*)'
+// ]);
+
+// export default clerkMiddleware(async (auth, req) => {
+//   if (!isPublicRoute(req)) {
+//     await auth.protect();
+//   }
+// });
 
 export default clerkMiddleware();
 
