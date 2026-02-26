@@ -106,3 +106,48 @@ On `https://dashboard.convex.dev/` select Settings -> Environment variables and 
 Create `src/components/providers.tsx`
 
 Delete `src/components/convex-client-provider.tsx`
+
+## Background Jobs
+
+1. Install AI SDK
+
+`npm i ai`
+
+2. Choose AI SDK Provider
+
+Use Google Provider (it's free)
+
+`npm install @ai-sdk/google`
+
+3. Create a demo route
+
+`src/app/api/demo/blocking/route.ts`
+
+4. In Google AI Studio create a new project `polaris-dev` and create an API key
+
+5. Create a simple page to try Google AI SDK
+
+`src/app/demo/page.tsx`
+
+6. For non-blocking UI use `Inngest`
+
+`npm install inngest`
+
+Run the Inngest Dev Server
+
+`npx --ignore-scripts=false inngest-cli@latest dev`
+
+Create an Inngest client
+
+Create `src/inngest/client.ts`
+
+Create a inngest route in `src/app/api/inngest/route.ts`
+
+Create a function `src/inngest/functions.ts` and add it to `src/app/api/inngest/route.ts`
+
+Create a request that doesn'tb block the interface `src/app/api/demo/background/route.ts`
+
+7. Implement Anthropic Provider (it's paid, but much better)
+
+`npm install @ai-sdk/anthropic`
+
