@@ -151,3 +151,9 @@ Create a request that doesn'tb block the interface `src/app/api/demo/background/
 
 `npm install @ai-sdk/anthropic`
 
+## Firecrawl AI for up-to-date responses 
+
+1. Install Firecrawl
+`npm i @mendable/firecrawl-js`
+
+2. Instatiate Firecrawl in `src/lib/firecrawl.ts`
