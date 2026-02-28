@@ -151,9 +151,20 @@ Create a request that doesn'tb block the interface `src/app/api/demo/background/
 
 `npm install @ai-sdk/anthropic`
 
-## Firecrawl AI for up-to-date responses 
+## Firecrawl AI for up-to-date responses with web scraping
 
 1. Install Firecrawl
 `npm i @mendable/firecrawl-js`
 
 2. Instatiate Firecrawl in `src/lib/firecrawl.ts`
+
+## Error Tracking
+
+1. In `src/app/demo/page.tsx` add error handler for client, API and Inngest
+
+2. Add a project in Sentry
+
+3. For Inngest Sentry logging add Inngest Sentry middleware
+
+`npm i @inngest/middleware-sentry`
+
