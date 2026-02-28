@@ -168,3 +168,13 @@ Create a request that doesn'tb block the interface `src/app/api/demo/background/
 
 `npm i @inngest/middleware-sentry`
 
+## Projects
+
+1. Clean up the pproject from the demo code
+
+2. Update convex schema at `convex/schema.ts`
+
+3. Delete all the database data in Convex dashboard `https://dashboard.convex.dev`
+
+4. Modify API requests
+
