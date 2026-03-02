@@ -178,3 +178,16 @@ Create a request that doesn'tb block the interface `src/app/api/demo/background/
 
 4. Modify API requests
 
+5. Add UI components
+
+## IDE Layout
+
+1. Create an UI components for nav bar
+
+2. Create an UI for main content
+
+Use split-pane component using `allotment`
+
+Create a Conversation sidebar
+
+For main content create two tabs: Code and Preview
