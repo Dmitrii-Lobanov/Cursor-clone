@@ -191,3 +191,8 @@ Use split-pane component using `allotment`
 Create a Conversation sidebar
 
 For main content create two tabs: Code and Preview
+
+## File Explorer
+
+1. Add files schema to convex schema
+
