@@ -196,3 +196,7 @@ For main content create two tabs: Code and Preview
 
 1. Add files schema to convex schema
 
+2. Add UI for File Explorer
+
+Use `@react-symbols/icons` for creating files and folders with appropriate file/folder icons
+
