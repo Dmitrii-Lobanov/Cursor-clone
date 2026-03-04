@@ -200,3 +200,5 @@ For main content create two tabs: Code and Preview
 
 Use `@react-symbols/icons` for creating files and folders with appropriate file/folder icons
 
+3. Add a folder tree
+

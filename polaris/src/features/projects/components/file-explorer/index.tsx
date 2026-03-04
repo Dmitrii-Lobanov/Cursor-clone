@@ -5,8 +5,10 @@ import { useState } from "react"
 import { Id } from "../../../../../convex/_generated/dataModel"
 import { useProject } from "../../hooks/use-projects"
 import { Button } from "@/components/ui/button"
-import { useCreateFile, useCreateFolder } from "../../hooks/use-files"
+import { useCreateFile, useCreateFolder, useFolderContents } from "../../hooks/use-files"
 import { CreateInput } from "./create-input"
+import { LoadingRow } from "./loading-row"
+import { Tree } from "./tree"
 
 interface Props {
     projectId: Id<'projects'>;
@@ -16,6 +18,11 @@ export const FileExplorer = ({ projectId }: Props) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const [collapseKey, setCollapseKey] = useState<number>(0);
     const [creating, setCreating] = useState<'folder' | 'file' | null>(null);
+
+    const rootFiles = useFolderContents({
+        projectId,
+        enabled: isOpen,
+    });
 
     const project = useProject(projectId);
 
@@ -107,6 +114,8 @@ export const FileExplorer = ({ projectId }: Props) => {
 
                 {isOpen && (
                     <>
+                        {rootFiles === undefined && <LoadingRow level={0} />}
+
                         {creating && (
                             <CreateInput
                                 type={creating}
@@ -115,6 +124,15 @@ export const FileExplorer = ({ projectId }: Props) => {
                                 onCancel={() => setCreating(null)}
                             />
                         )}
+
+                        {rootFiles?.map((item) => (
+                            <Tree
+                                key={`${item._id}-${collapseKey}`}
+                                item={item}
+                                level={0}
+                                projectId={projectId}
+                            />
+                        ))}
                     </>
                 )}
             </ScrollArea>
