@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { LoadingRow } from "./loading-row";
 import { getItemPadding } from "./constants";
 import { CreateInput } from "./create-input";
+import { RenameInput } from "./rename-input";
 
 interface Props {
     item: Doc<'files'>;
@@ -31,6 +32,16 @@ export const Tree = ({ item, level = 0, projectId }: Props) => {
         enabled: item.type === 'folder' && isOpen,
     });
 
+    const handleRename = (newName: string) => {
+        setIsRenaming(false);
+
+        if (newName === item.name) {
+            return;
+        }
+
+        renameFile({ id: item._id, newName });
+    }
+
     const handleCreate = (name: string) => {
         setCreating(null);
 
@@ -52,6 +63,18 @@ export const Tree = ({ item, level = 0, projectId }: Props) => {
 
     if (item.type === 'file') {
         const fileName = item.name;
+
+        if (isRenaming) {
+            return (
+                <RenameInput
+                    type='file'
+                    defaultValue={fileName}
+                    level={level}
+                    onSubmit={handleRename}
+                    onCancel={() => setIsRenaming(false)}
+                />
+            )
+        }
 
         return (
             <TreeItemWrapper
@@ -84,7 +107,7 @@ export const Tree = ({ item, level = 0, projectId }: Props) => {
 
     const folderName = item.name;
 
-    const folderContent = (
+    const folderRender = (
         <>
             <div className="flex items-center gap-0.5">
                 <ChevronRightIcon
@@ -112,7 +135,7 @@ export const Tree = ({ item, level = 0, projectId }: Props) => {
                     className="group flex items-center gap-1 h-5.5 hover:bg-accent/30 w-full"
                     style={{ paddingLeft: getItemPadding(level, false) }}
                 >
-                    {folderContent}
+                    {folderRender}
                 </button>
 
                 {isOpen && (
@@ -125,6 +148,36 @@ export const Tree = ({ item, level = 0, projectId }: Props) => {
                             onSubmit={handleCreate}
                             onCancel={() => setCreating(null)}
                         />
+
+                        {folderContents?.map((subItem) => (
+                            <Tree
+                                key={item._id}
+                                item={subItem}
+                                level={level + 1}
+                                projectId={projectId}
+                            />
+                        ))}
+                    </>
+                )}
+            </>
+        )
+    }
+
+    if (isRenaming) {
+        return (
+            <>
+                <RenameInput
+                    type='folder'
+                    defaultValue={folderName}
+                    isOpen={isOpen}
+                    level={level}
+                    onSubmit={handleRename}
+                    onCancel={() => setIsRenaming(false)}
+                />
+
+                {isOpen && (
+                    <>
+                        {folderContents === undefined && <LoadingRow level={level + 1} />}
 
                         {folderContents?.map((subItem) => (
                             <Tree
@@ -153,7 +206,7 @@ export const Tree = ({ item, level = 0, projectId }: Props) => {
                 onCreateFile={() => startCreating('file')}
                 onCreateFolder={() => startCreating('folder')}
             >
-                {folderContent}
+                {folderRender}
             </TreeItemWrapper>
 
             {isOpen && (
