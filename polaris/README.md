@@ -202,3 +202,46 @@ Use `@react-symbols/icons` for creating files and folders with appropriate file/
 
 3. Add a folder tree
 
+## Code Editor State
+
+1. Install `Zustand` as the state manager
+
+2. Create UI for code editor tabs
+
+3. Create UI for code editor
+
+Install `codemirror`
+
+Install `@codemirror/lang-javascript`
+
+Install `@codemirror/view`
+
+Install `@codemirror/theme-one-dark` for dark theme
+
+Create an extension for editor theme
+
+Implement smart recognizer for code syntax
+
+Create an extension for language recognizing
+
+Install packages:
+`@codemirror/lang-html`
+`@codemirror/lang-css` 
+`@codemirror/lang-json` 
+`@codemirror/lang-markdown` 
+`@codemirror/lang-python`
+
+Adjust code indentation
+
+Install `@codemirror/commands`
+
+Add a minimap
+
+Install `@replit/codemirror-minimap`
+
+Add a depth of indentation
+
+Install `@replit/codemirror-indentation-markers`
+
+Add a saving file functionality
+
