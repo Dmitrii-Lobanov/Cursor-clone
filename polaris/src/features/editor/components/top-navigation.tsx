@@ -5,6 +5,7 @@ import { useFile } from "@/features/projects/hooks/use-files";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
 import { FileIcon } from "@react-symbols/icons/utils";
+import { XIcon } from "lucide-react";
 
 interface Props {
     projectId: Id<'projects'>;
@@ -57,6 +58,27 @@ const Tab = ({ fileId, isFirst, projectId }: TabProps) => {
             )}>
                 {fileName}
             </span>
+
+            <button
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeTab(fileId);
+                }}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        closeTab(fileId);
+                    }
+                }}
+                className={cn(
+                    'p-0.5 rounded-sm hover:bg-white/10 opacity-0 group-hover:opacity-100',
+                    isActive && 'opacity-100'
+                )}
+            >
+                <XIcon className="size-3.5" />
+            </button>
         </div>
     )
 }

@@ -15,7 +15,7 @@ interface Props {
 }
 
 export const FileExplorer = ({ projectId }: Props) => {
-    const [isOpen, setIsOpen] = useState<boolean>(false);
+    const [isOpen, setIsOpen] = useState<boolean>(true);
     const [collapseKey, setCollapseKey] = useState<number>(0);
     const [creating, setCreating] = useState<'folder' | 'file' | null>(null);
 
