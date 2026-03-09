@@ -245,3 +245,10 @@ Install `@replit/codemirror-indentation-markers`
 
 Add a saving file functionality
 
+## AI Features
+
+1. Add a suggestion extension
+
+2. Create an API request for AI suggestions
+
+3. Install `ky` as a fetch framework (lightweight alternative to `axios`)
