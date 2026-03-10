@@ -252,3 +252,15 @@ Add a saving file functionality
 2. Create an API request for AI suggestions
 
 3. Install `ky` as a fetch framework (lightweight alternative to `axios`)
+
+## Conversation System
+
+1. Add a conversation schema
+
+2. Add a messages schema
+
+3. Add API requests
+
+4. Create a Conversation Sidebar UI
+
+Install `npx shadcn@latest add @ai-elements/all`
