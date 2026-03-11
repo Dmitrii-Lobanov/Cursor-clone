@@ -53,33 +53,35 @@ export const ConversationSidebar = ({ projectId }: Props) => {
     };
 
     const handleSubmit = async (message: PromptInputMessage) => {
+        // If processing and no new message, this is just a stop function
         if (isProcessing && !message.text) {
-            // TODO: await handleCancel
-            setInput('');
-            return;
+        // await handleCancel()
+        setInput("");
+        return;
         }
 
         let conversationId = activeConversationId;
 
         if (!conversationId) {
-            conversationId = await handleCreateConversation();
-
-            if (!conversationId) {
-                return;
-            }
+        conversationId = await handleCreateConversation();
+        if (!conversationId) {
+            return;
+        }
         }
 
         // Trigger Inngest function via API
         try {
-            await ky.post('/api/messages', {
-                json: {
-                    conversationId,
-                    message: message.text,
-                }
-            });
+        await ky.post("/api/messages", {
+            json: {
+            conversationId,
+            message: message.text,
+            },
+        });
         } catch {
-            toast.error('Message failed to send');
+        toast.error("Message failed to send");
         }
+
+        setInput("");
     }
 
     return (
