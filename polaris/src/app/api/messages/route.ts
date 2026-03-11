@@ -1,10 +1,9 @@
 import { convex } from "@/lib/convex-client";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import z, { success } from "zod";
+import z from "zod";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
-import { error } from "console";
 import { inngest } from "@/inngest/client";
 
 const requestSchema = z.object({
@@ -22,23 +21,11 @@ export const POST = async (request: Request) => {
         );
     }
 
-    const internalKey = process.env.APP_CONVEX_INTERNAL_KEY;
-
-    console.log('internalKey', internalKey);
-
-    // if (!internalKey) {
-    //     return NextResponse.json(
-    //         { error: 'Internal key not configured' },
-    //         { status: 500 }
-    //     );
-    // }
-
     const body = await request.json();
     const { conversationId, message } = requestSchema.parse(body);
 
     // Invoke convex mutation, query
     const conversation = await convex.query(api.system.getConversationById, {
-        // internalKey,
         conversationId: conversationId as Id<'conversations'>,
     });
 
@@ -51,9 +38,36 @@ export const POST = async (request: Request) => {
 
     const projectId = conversation.projectId;
 
+    // Check for processing messages
+    const processingMessages: any = await convex.query(
+        api.system.getProcessingMessages,
+        {
+        projectId,
+        }
+    );
+
+    if (processingMessages.length > 0) {
+        // Cancel all processing messages
+        await Promise.all(
+            processingMessages.map(async (msg: any) => {
+                await inngest.send({
+                    name: "message/cancel",
+                    data: {
+                    messageId: msg._id,
+                    },
+                });
+
+                await convex.mutation(api.system.updateMessageStatus, {
+                    messageId: msg._id,
+                    status: "cancelled",
+                });
+            })
+        );
+    }
+
+
     // Create user message
     await convex.mutation(api.system.createMessage, {
-        // internalKey,
         conversationId: conversationId as Id<'conversations'>,
         projectId,
         role: 'user',
@@ -62,7 +76,6 @@ export const POST = async (request: Request) => {
 
     // Create assistant message placeholder with processing status
     const assistantMessageId = await convex.mutation(api.system.createMessage, {
-        // internalKey,
         conversationId: conversationId as Id<'conversations'>,
         projectId,
         role: 'assistant',

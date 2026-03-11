@@ -264,3 +264,6 @@ Add a saving file functionality
 4. Create a Conversation Sidebar UI
 
 Install `npx shadcn@latest add @ai-elements/all`
+
+## AI Agent Tools
+

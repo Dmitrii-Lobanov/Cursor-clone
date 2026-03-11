@@ -1,34 +1,18 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
-const validateInternalKey = (key: string) => {
-    const internalKey = process.env.APP_CONVEX_INTERNAL_KEY;
-
-    if (!internalKey) {
-        throw new Error('APP_CONVEX_INTERNAL_KEY is not configured');
-    }
-
-    if (key !== internalKey) {
-        throw new Error('Invalid internal key');
-    }
-};
-
 export const getConversationById = query({
     args: {
         conversationId: v.id('conversations'),
-        // internalKey: v.string(),
     },
 
     handler: async (ctx, args) => {
-        // validateInternalKey(args.internalKey);
-
         return await ctx.db.get(args.conversationId);
     },
 });
 
 export const createMessage = mutation({
   args: {
-    // internalKey: v.string(),
     conversationId: v.id("conversations"),
     projectId: v.id("projects"),
     role: v.union(v.literal("user"), v.literal("assistant")),
@@ -42,8 +26,6 @@ export const createMessage = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    // validateInternalKey(args.internalKey);
-
     const messageId = await ctx.db.insert("messages", {
       conversationId: args.conversationId,
       projectId: args.projectId,
@@ -63,17 +45,46 @@ export const createMessage = mutation({
 
 export const updateMessageContent = mutation({
     args: {
-        // internalKey: v.string(),
         messageId: v.id('messages'),
         content: v.string(),
     },
 
     handler: async (ctx, args) => {
-        // validateInternalKey(args.internalKey);
-
         await ctx.db.patch(args.messageId, {
             content: args.content,
             status: 'completed',
         });
     }
+});
+
+export const getProcessingMessages = query({
+  args: {
+    projectId: v.id("projects"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("messages")
+      .withIndex("by_project_status", (q) =>
+        q
+          .eq("projectId", args.projectId)
+          .eq("status", "processing")
+      )
+      .collect();
+  },
+});
+
+export const updateMessageStatus = mutation({
+  args: {
+    messageId: v.id("messages"),
+    status: v.union(
+      v.literal("processing"),
+      v.literal("completed"),
+      v.literal("cancelled")
+    ),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.messageId, {
+      status: args.status,
+    });
+  },
 });
