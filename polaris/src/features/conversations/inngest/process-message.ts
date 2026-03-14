@@ -8,6 +8,8 @@ import { DEFAULT_CONVERSATION_TITLE } from "../constants";
 import { createAgent, createNetwork, gemini } from '@inngest/agent-kit';
 import { createReadFilesTool } from "./tools/read-files";
 import { createListFilesTool } from "./tools/list-files";
+import { createUpdateFileTool } from "./tools/update-file";
+import { createCreateFilesTool } from "./tools/create-files";
 
 interface MessageEvent {
     messageId: Id<'messages'>;
@@ -134,6 +136,8 @@ export const processMessage = inngest.createFunction(
             tools: [
                 createListFilesTool({ projectId }),
                 createReadFilesTool(),
+                createUpdateFileTool(),
+                createCreateFilesTool({ projectId }),
             ],
         });
 
