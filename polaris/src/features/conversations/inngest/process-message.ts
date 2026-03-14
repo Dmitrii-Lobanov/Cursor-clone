@@ -5,7 +5,9 @@ import { api } from "../../../../convex/_generated/api";
 import { NonRetriableError } from "inngest";
 import { CODING_AGENT_SYSTEM_PROMPT, TITLE_GENERATOR_SYSTEM_PROMPT } from "./constants";
 import { DEFAULT_CONVERSATION_TITLE } from "../constants";
-import { createAgent, gemini } from '@inngest/agent-kit';
+import { createAgent, createNetwork, gemini } from '@inngest/agent-kit';
+import { createReadFilesTool } from "./tools/read-files";
+import { createListFilesTool } from "./tools/list-files";
 
 interface MessageEvent {
     messageId: Id<'messages'>;
@@ -120,11 +122,64 @@ export const processMessage = inngest.createFunction(
             }
         }
 
+        // Create the coding agent with file tools
+        const codingAgent = createAgent({
+            name: 'polaris',
+            description: 'An expert AI coding assistant',
+            system: systemPrompt,
+            model: gemini({
+                model: 'gemini-2.0-flash-lite',
+                apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY
+            }),
+            tools: [
+                createListFilesTool({ projectId }),
+                createReadFilesTool(),
+            ],
+        });
+
+        // Create network with single agent
+        const network = createNetwork({
+            name: 'polaris-network',
+            agents: [codingAgent],
+            maxIter: 20,
+            router: ({ network }) => {
+                const lastResult = network.state.results.at(-1);
+
+                const hasTextResponse = lastResult?.output.some((m) => m.type === 'text' && m.role === 'assistant');
+
+                const hasToolCalls = lastResult?.output.some((m) => m.type === 'tool_call');
+
+                // Only stop if there's text WITHOUT tool calls (final response)
+                if (hasTextResponse && !hasToolCalls) {
+                    return undefined;
+                }
+
+                return codingAgent;
+            },
+        });
+
+        // Run the agent
+        const result = await network.run(message);
+
+        // Extract the assistant's text response from the last agent result
+        const lastResult = result.state.results.at(-1);
+        const textMessage = lastResult?.output.find((m) => m.type === 'text' && m.role === 'assistant');
+        let assistantResponse = 'I processed your request. Let me know if you need anything else!';
+
+        if (textMessage?.type === 'text') {
+            assistantResponse = typeof textMessage.content === 'string'
+                ? textMessage.content.trim()
+                : textMessage.content.map((c) => c.text).join('').trim();
+        }
+
+
         await step.run('update-assistant-mesage', async () => {
             await convex.mutation(api.system.updateMessageContent, {
                 messageId,
-                content: 'AI processed this message',
+                content: assistantResponse,
             });
         });
+
+        return { success: true, messageId, conversationId };
     },
 );
