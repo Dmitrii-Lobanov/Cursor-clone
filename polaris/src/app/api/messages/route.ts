@@ -16,7 +16,7 @@ export const POST = async (request: Request) => {
 
     if (!userId) {
         return NextResponse.json(
-            {error: 'Unauthorized'},
+            { error: 'Unauthorized' },
             { status: 401 }
         );
     }
@@ -42,7 +42,7 @@ export const POST = async (request: Request) => {
     const processingMessages: any = await convex.query(
         api.system.getProcessingMessages,
         {
-        projectId,
+            projectId,
         }
     );
 
@@ -53,7 +53,7 @@ export const POST = async (request: Request) => {
                 await inngest.send({
                     name: "message/cancel",
                     data: {
-                    messageId: msg._id,
+                        messageId: msg._id,
                     },
                 });
 
@@ -88,6 +88,9 @@ export const POST = async (request: Request) => {
         name: 'message/sent',
         data: {
             messageId: assistantMessageId,
+            conversationId,
+            projectId,
+            message,
         },
     });
 

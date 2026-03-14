@@ -267,3 +267,6 @@ Install `npx shadcn@latest add @ai-elements/all`
 
 ## AI Agent Tools
 
+Install Inngest Agent Kit 
+
+`npm i @inngest/agent-kit`
