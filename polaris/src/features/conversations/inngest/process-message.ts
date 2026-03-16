@@ -10,6 +10,10 @@ import { createReadFilesTool } from "./tools/read-files";
 import { createListFilesTool } from "./tools/list-files";
 import { createUpdateFileTool } from "./tools/update-file";
 import { createCreateFilesTool } from "./tools/create-files";
+import { createCreateFolderTool } from "./tools/create-folder";
+import { createRenameFileTool } from "./tools/rename-file";
+import { createDeleteFilesTool } from "./tools/delete-files";
+import { createScrapeUrlsTool } from "./tools/scrape-urls";
 
 interface MessageEvent {
     messageId: Id<'messages'>;
@@ -95,7 +99,7 @@ export const processMessage = inngest.createFunction(
                 name: 'title-generator',
                 system: TITLE_GENERATOR_SYSTEM_PROMPT,
                 model: gemini({
-                    model: 'gemini-2.0-flash-lite',
+                    model: 'gemini-2.5-flash',
                     apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY
                 })
             });
@@ -130,7 +134,7 @@ export const processMessage = inngest.createFunction(
             description: 'An expert AI coding assistant',
             system: systemPrompt,
             model: gemini({
-                model: 'gemini-2.0-flash-lite',
+                model: 'gemini-2.5-flash',
                 apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY
             }),
             tools: [
@@ -138,6 +142,10 @@ export const processMessage = inngest.createFunction(
                 createReadFilesTool(),
                 createUpdateFileTool(),
                 createCreateFilesTool({ projectId }),
+                createCreateFolderTool({ projectId }),
+                createRenameFileTool(),
+                createDeleteFilesTool(),
+                createScrapeUrlsTool(),
             ],
         });
 

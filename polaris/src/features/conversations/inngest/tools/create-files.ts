@@ -63,6 +63,27 @@ export const createCreateFilesTool = ({ projectId }: CreateFilesTooloptions) => 
                             if (parentFolder.type !== 'folder') {
                                 return `Error: File with ID ${parentId} is a file, not a folder. Use a folder ID as parentId.`;
                             }
+
+                            const results = await convex.mutation(api.system.createFiles, {
+                                projectId,
+                                parentId: resolvedParentId,
+                                files,
+                            });
+
+                            const created = results.filter((f) => !f.error);
+                            const failed = results.filter((f) => f.error);
+
+                            let response = `Created ${created.length} files`;
+
+                            if (created.length > 0) {
+                                response += `: ${created.map((f) => f.name).join(', ')}`;
+                            }
+
+                            if (failed.length > 0) {
+                                response += `\nFailed: ${failed.map((f) => `${f.name}: ${f.error}`).join(', ')}`;
+                            }
+
+                            return response;
                         } catch {
                             return `Error: Invalid parentId ${parentId}. Use listFiles to get valid folder IDs, or use empty 
                             string for root.`;
