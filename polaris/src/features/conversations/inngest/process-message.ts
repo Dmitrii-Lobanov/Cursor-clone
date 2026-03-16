@@ -3,9 +3,23 @@ import { Id } from "../../../../convex/_generated/dataModel";
 import { convex } from "@/lib/convex-client";
 import { api } from "../../../../convex/_generated/api";
 import { NonRetriableError } from "inngest";
+import { CODING_AGENT_SYSTEM_PROMPT, TITLE_GENERATOR_SYSTEM_PROMPT } from "./constants";
+import { DEFAULT_CONVERSATION_TITLE } from "../constants";
+import { createAgent, createNetwork, gemini } from '@inngest/agent-kit';
+import { createReadFilesTool } from "./tools/read-files";
+import { createListFilesTool } from "./tools/list-files";
+import { createUpdateFileTool } from "./tools/update-file";
+import { createCreateFilesTool } from "./tools/create-files";
+import { createCreateFolderTool } from "./tools/create-folder";
+import { createRenameFileTool } from "./tools/rename-file";
+import { createDeleteFilesTool } from "./tools/delete-files";
+import { createScrapeUrlsTool } from "./tools/scrape-urls";
 
 interface MessageEvent {
     messageId: Id<'messages'>;
+    conversationId: Id<'conversations'>;
+    projectId: Id<'projects'>;
+    message: string;
 }
 
 export const processMessage = inngest.createFunction(
@@ -33,15 +47,151 @@ export const processMessage = inngest.createFunction(
     async ({ event, step }) => {
         const {
             messageId,
+            conversationId,
+            projectId,
+            message,
         } = event.data as MessageEvent;
 
-        await step.sleep('wait-for-ai-processing', '5s');
+        await step.sleep('wait-for-db-sync', '1s');
+
+        // Get conversation for title generation check
+        const converation = await step.run('get-conversation', async () => {
+            return await convex.query(api.system.getConversationById, {
+                conversationId,
+            });
+        });
+
+        if (!converation) {
+            throw new NonRetriableError('Conversation not found');
+        }
+
+        // Fetch recent messages for conversation context
+        const recentMessages = await step.run('get-recent-messages', async () => {
+            return await convex.query(api.system.getRecentMessages, {
+                conversationId,
+                limit: 10,
+            });
+        });
+
+        // Build system prompt with conversation history 
+        // (exclude the current processing message)
+        let systemPrompt = CODING_AGENT_SYSTEM_PROMPT;
+
+        // Filter out the current processing message and empty messages
+        const contextMessages = recentMessages
+            .filter((m) => m._id !== messageId && m.content.trim() !== '');
+
+        if (contextMessages.length > 0) {
+            const history = contextMessages
+                .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
+                .join('\n');
+
+            systemPrompt += `\n\n##Previous Conversation (for context only - do NOT repeat those 
+            responses):\n${history}\n\n##Current Request:\nRespond ONLY to the user's new message below.
+            Do not repeat or referenceyour  previous responses.`;
+        }
+
+        // Generate conversation title if it's still the default
+        const shouldGenerateTitle = converation.title === DEFAULT_CONVERSATION_TITLE;
+
+        if (shouldGenerateTitle) {
+            const titleAgent = createAgent({
+                name: 'title-generator',
+                system: TITLE_GENERATOR_SYSTEM_PROMPT,
+                model: gemini({
+                    model: 'gemini-2.5-flash',
+                    apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY
+                })
+            });
+
+            const { output } = await titleAgent.run(
+                message, { step }
+            );
+
+            const textMessage = output.find((m) => m.type === 'text' && m.role === 'assistant');
+
+            if (textMessage?.type === 'text') {
+                const title = typeof textMessage.content === 'string'
+                    ? textMessage.content.trim()
+                    : textMessage.content.map((c) => c.text)
+                        .join('')
+                        .trim();
+
+                if (title) {
+                    await step.run('update-conversation-title', async () => {
+                        await convex.mutation(api.system.updateConversationTitle, {
+                            conversationId,
+                            title,
+                        });
+                    });
+                }
+            }
+        }
+
+        // Create the coding agent with file tools
+        const codingAgent = createAgent({
+            name: 'polaris',
+            description: 'An expert AI coding assistant',
+            system: systemPrompt,
+            model: gemini({
+                model: 'gemini-2.5-flash',
+                apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY
+            }),
+            tools: [
+                createListFilesTool({ projectId }),
+                createReadFilesTool(),
+                createUpdateFileTool(),
+                createCreateFilesTool({ projectId }),
+                createCreateFolderTool({ projectId }),
+                createRenameFileTool(),
+                createDeleteFilesTool(),
+                createScrapeUrlsTool(),
+            ],
+        });
+
+        // Create network with single agent
+        const network = createNetwork({
+            name: 'polaris-network',
+            agents: [codingAgent],
+            maxIter: 20,
+            router: ({ network }) => {
+                const lastResult = network.state.results.at(-1);
+
+                const hasTextResponse = lastResult?.output.some((m) => m.type === 'text' && m.role === 'assistant');
+
+                const hasToolCalls = lastResult?.output.some((m) => m.type === 'tool_call');
+
+                // Only stop if there's text WITHOUT tool calls (final response)
+                if (hasTextResponse && !hasToolCalls) {
+                    return undefined;
+                }
+
+                return codingAgent;
+            },
+        });
+
+        // Run the agent
+        const result = await network.run(message);
+
+        // Extract the assistant's text response from the last agent result
+        const lastResult = result.state.results.at(-1);
+        const textMessage = lastResult?.output.find((m) => m.type === 'text' && m.role === 'assistant');
+        let assistantResponse = 'I processed your request. Let me know if you need anything else!';
+
+        if (textMessage?.type === 'text') {
+            assistantResponse = typeof textMessage.content === 'string'
+                ? textMessage.content.trim()
+                : textMessage.content.map((c) => c.text).join('').trim();
+        }
+
 
         await step.run('update-assistant-mesage', async () => {
             await convex.mutation(api.system.updateMessageContent, {
                 messageId,
-                content: 'AI processed this message',
+                content: assistantResponse,
             });
         });
+
+        return { success: true, messageId, conversationId };
     },
 );
