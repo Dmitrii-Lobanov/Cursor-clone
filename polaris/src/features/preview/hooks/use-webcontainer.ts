@@ -2,9 +2,10 @@
 
 import { WebContainer } from "@webcontainer/api";
 import { Id } from "../../../../convex/_generated/dataModel";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useFiles } from "@/features/projects/hooks/use-files";
-import { buildFileTree } from "../utils/file-tree";
+import { buildFileTree, getFilePath } from "../utils/file-tree";
+import { err } from "inngest/types";
 
 let webcontainerInstance: WebContainer | null = null;
 let bootPromise: Promise<WebContainer> | null = null;
@@ -133,4 +134,52 @@ export const useWebcontainer = ({ projectId, enabled, settings }: UseWebcontaine
         settings?.installCommand,
         settings?.devCommand,
     ]);
+
+    // Sync file changes (hot reload)
+    useEffect(() => {
+        const container = containerRef.current;
+
+        if (!container || !files || status !== 'running') {
+            return;
+        }
+
+        const filesMap = new Map(files.map(f => [f._id, f]));
+
+        for (const file of files) {
+            if (file.type !== 'file' || file.storageId || !file.content) continue;
+
+            const filePath = getFilePath(file, filesMap);
+
+            container.fs.writeFile(filePath, file.content);
+        }
+    }, [files, status]);
+
+    // Reset when disabled
+    useEffect(() => {
+        if (!enabled) {
+            hasStartedRef.current = false;
+            setStatus('idle');
+            setPreviewUrl(null);
+            setError(null);
+        }
+    }, [enabled]);
+
+    // Restart the entire Webcontainer process
+    const restart = useCallback(() => {
+        teardownWebcontainer();
+        containerRef.current = null;
+        hasStartedRef.current = false;
+        setStatus('idle');
+        setPreviewUrl(null);
+        setError(null);
+        setRestartKey((k) => k + 1);
+    }, []);
+
+    return {
+        status,
+        previewUrl,
+        error,
+        restart,
+        terminalOutput,
+    };
 };
