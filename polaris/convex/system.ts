@@ -369,3 +369,149 @@ export const deleteFile = mutation({
     return args.fileId;
   },
 });
+
+export const cleanup = mutation({
+  args: {
+    projectId: v.id('projects'),
+  },
+
+  handler: async (ctx, args) => {
+    const files = await ctx.db.query('files').withIndex('by_project', (q) => q.eq('projectId', args.projectId)).collect();
+
+    for (const file of files) {
+      if (file.storageId) {
+        await ctx.storage.delete(file.storageId);
+      }
+
+      await ctx.db.delete(file._id);
+    }
+
+    return { deletedFiles: files.length };
+  }
+});
+
+export const generateUploadUrl = mutation({
+  args: {},
+
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const createBinaryFile = mutation({
+  args: {
+    projectId: v.id('projects'),
+    name: v.string(),
+    storageId: v.id('_storage'),
+    parentId: v.optional(v.id('files')),
+  },
+
+  handler: async (ctx, args) => {
+    const files = await ctx.db.query('files').withIndex('by_project_parent', (q) => q
+      .eq('projectId', args.projectId)
+      .eq('parentId', args.parentId))
+      .collect();
+
+    const existing = files.find((file) => file.name === args.name && file.type === 'file');
+
+    if (existing) {
+      throw new Error('File already exists');
+    }
+
+    const fileId = await ctx.db.insert('files', {
+      projectId: args.projectId,
+      name: args.name,
+      type: 'file',
+      parentId: args.parentId,
+      storageId: args.storageId,
+      updatedAt: Date.now(),
+    });
+
+    return fileId;
+  },
+});
+
+export const updateImportStatus = mutation({
+  args: {
+    projectId: v.id('projects'),
+    status: v.union(
+      v.literal('importing'),
+      v.literal('completed'),
+      v.literal('failed'),
+    ),
+  },
+
+  handler: async (ctx, args) => {
+    await ctx.db.patch("projects", args.projectId, {
+      importStatus: args.status,
+      updatedAt: Date.now(),
+    });
+
+    return args.projectId;
+  },
+});
+
+export const updateExportStatus = mutation({
+  args: {
+    projectId: v.id('projects'),
+    status: v.optional(v.union(
+      v.literal('exporting'),
+      v.literal('completed'),
+      v.literal('failed'),
+      v.literal('cancelled'),
+    )),
+    repoUrl: v.optional(v.string()),
+  },
+
+  handler: async (ctx, args) => {
+    await ctx.db.patch("projects", args.projectId, {
+      exportStatus: args.status,
+      exportRepoUrl: args.repoUrl,
+      updatedAt: Date.now(),
+    });
+
+    return args.projectId;
+  },
+});
+
+export const getProjectFilesWithUrls = mutation({
+  args: {
+    projectId: v.id('projects'),
+  },
+
+  handler: async (ctx, args) => {
+    const files = await ctx.db.query('files').withIndex('by_project', (q) => q.eq('projectId', args.projectId)).collect();
+
+    return await Promise.all(
+      files.map(async (file) => {
+        if (file.storageId) {
+          const url = await ctx.storage.getUrl(file.storageId);
+
+          return {
+            ...file,
+            storageUrl: url,
+          };
+        }
+
+        return { ...file, storageUrl: null };
+      })
+    );
+  },
+});
+
+export const createProject = mutation({
+    args: {
+        name: v.string(),
+        ownerId: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const projectId = await ctx.db.insert("projects", {
+            name: args.name,
+            ownerId: args.ownerId,
+            updatedAt: Date.now(),
+            importStatus: 'importing',
+        });
+
+        return projectId;
+    }
+});
