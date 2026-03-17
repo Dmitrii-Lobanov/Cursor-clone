@@ -287,3 +287,7 @@ Update projects schema
 Create a File Tree utility
 
 Implement a Webcontainer Hook
+
+Implement a Terminal UI
+
+For a Settings popover we'll use `@tanstack/react-form`

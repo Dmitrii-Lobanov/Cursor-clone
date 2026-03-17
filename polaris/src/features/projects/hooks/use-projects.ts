@@ -23,6 +23,7 @@ export const useCreateProject = () => {
             const existingProjects = localStore.getQuery(api.projects.get);
 
             if (existingProjects !== undefined) {
+                // eslint-disable-next-line react-hooks/purity
                 const now = Date.now();
 
                 const newProject = {
@@ -38,7 +39,7 @@ export const useCreateProject = () => {
     });
 }
 
-export const useRenameProject = () => {
+export const useRenameProject = (projectId: Id<"projects">) => {
     return useMutation(api.projects.rename).withOptimisticUpdate(
         (localStore, args) => {
             const existingProject = localStore.getQuery(api.projects.getById, {
@@ -52,7 +53,8 @@ export const useRenameProject = () => {
                     {
                         ...existingProject,
                         name: args.name,
-                        updatedAt: Date.now()
+                        // eslint-disable-next-line react-hooks/purity
+                        updatedAt: Date.now(),
                     }
                 )
             }
@@ -72,3 +74,7 @@ export const useRenameProject = () => {
             }
     });
 }
+
+export const useUpdateProjectSettings = () => {
+    return useMutation(api.projects.updateSettings);
+};

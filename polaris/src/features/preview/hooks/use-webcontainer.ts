@@ -5,7 +5,6 @@ import { Id } from "../../../../convex/_generated/dataModel";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFiles } from "@/features/projects/hooks/use-files";
 import { buildFileTree, getFilePath } from "../utils/file-tree";
-import { err } from "inngest/types";
 
 let webcontainerInstance: WebContainer | null = null;
 let bootPromise: Promise<WebContainer> | null = null;
@@ -42,7 +41,7 @@ interface UseWebcontainersProps {
     };
 }
 
-export const useWebcontainer = ({ projectId, enabled, settings }: UseWebcontainersProps) => {
+export const useWebContainer = ({ projectId, enabled, settings }: UseWebcontainersProps) => {
     const [status, setStatus] = useState<'idle' | 'booting' | 'installing' | 'running' | 'error'>('idle');
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [error, setError] = useState<Error | null>(null);
