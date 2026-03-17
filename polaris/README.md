@@ -3,9 +3,10 @@ This is a README
 # Steps
 
 ## Project Setup
+
 1. Install Next.js
 
-```npx create-next-app@latest```
+`npx create-next-app@latest`
 
 2. Install `shadcn`
 
@@ -17,9 +18,9 @@ This is a README
 
 4. Add theme provider
 
-    Create a `src/components/theme-provider.tsx` with a `ThemeProvider` component from `next-themes`
+   Create a `src/components/theme-provider.tsx` with a `ThemeProvider` component from `next-themes`
 
-    Add `ThemeProvider` from `src/components/theme-provider.tsx` to `src/app/layout.tsx`
+   Add `ThemeProvider` from `src/components/theme-provider.tsx` to `src/app/layout.tsx`
 
 5. Change default fonts in `src/app/layout.tsx`
 
@@ -35,7 +36,7 @@ Choose `Github` in Sign in options
 
 2. Install `clerk`
 
-```npm install @clerk/nextjs```
+`npm install @clerk/nextjs`
 
 3. Set Clerk API keys
 
@@ -154,7 +155,7 @@ Create a request that doesn'tb block the interface `src/app/api/demo/background/
 ## Firecrawl AI for up-to-date responses with web scraping
 
 1. Install Firecrawl
-`npm i @mendable/firecrawl-js`
+   `npm i @mendable/firecrawl-js`
 
 2. Instatiate Firecrawl in `src/lib/firecrawl.ts`
 
@@ -226,9 +227,9 @@ Create an extension for language recognizing
 
 Install packages:
 `@codemirror/lang-html`
-`@codemirror/lang-css` 
-`@codemirror/lang-json` 
-`@codemirror/lang-markdown` 
+`@codemirror/lang-css`
+`@codemirror/lang-json`
+`@codemirror/lang-markdown`
 `@codemirror/lang-python`
 
 Adjust code indentation
@@ -267,6 +268,26 @@ Install `npx shadcn@latest add @ai-elements/all`
 
 ## AI Agent Tools
 
-Install Inngest Agent Kit 
+Install Inngest Agent Kit
 
 `npm i @inngest/agent-kit`
+
+## Webcontainers, Terminal & Preview
+
+1. Install Webcontainers
+
+`npm i @webcontainer/api @xterm/xterm @xterm/addon-fit`
+
+Configure Cross-Origin Isolation
+
+Add the headers to `next.config.ts`:
+
+Update projects schema
+
+Create a File Tree utility
+
+Implement a Webcontainer Hook
+
+Implement a Terminal UI
+
+For a Settings popover we'll use `@tanstack/react-form`
