@@ -291,3 +291,19 @@ Implement a Webcontainer Hook
 Implement a Terminal UI
 
 For a Settings popover we'll use `@tanstack/react-form`
+
+## Github Import Export
+
+Install `octokit` which is a GitHub client
+
+Install `isbinaryfile` which define is file binary or not
+
+Install `react-icons`
+
+Add 'Github' to connections on `Clerk` SSO Connections Page
+
+Activate Use Custom Credentials in A Github Connection
+
+Register new OAuth App on [Github](https://github.com/settings/developers)
+
+Add API requests for Github import and export
