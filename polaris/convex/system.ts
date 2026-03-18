@@ -1,12 +1,11 @@
 import { v } from "convex/values";
+
 import { mutation, query } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
 
 export const getConversationById = query({
   args: {
-    conversationId: v.id('conversations'),
+    conversationId: v.id("conversations"),
   },
-
   handler: async (ctx, args) => {
     return await ctx.db.get(args.conversationId);
   },
@@ -46,31 +45,14 @@ export const createMessage = mutation({
 
 export const updateMessageContent = mutation({
   args: {
-    messageId: v.id('messages'),
+    messageId: v.id("messages"),
     content: v.string(),
   },
-
   handler: async (ctx, args) => {
     await ctx.db.patch(args.messageId, {
       content: args.content,
-      status: 'completed',
+      status: "completed" as const,
     });
-  }
-});
-
-export const getProcessingMessages = query({
-  args: {
-    projectId: v.id("projects"),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("messages")
-      .withIndex("by_project_status", (q) =>
-        q
-          .eq("projectId", args.projectId)
-          .eq("status", "processing")
-      )
-      .collect();
   },
 });
 
@@ -90,78 +72,95 @@ export const updateMessageStatus = mutation({
   },
 });
 
+export const getProcessingMessages = query({
+  args: {
+    projectId: v.id("projects"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("messages")
+      .withIndex("by_project_status", (q) =>
+        q
+          .eq("projectId", args.projectId)
+          .eq("status", "processing")
+      )
+      .collect();
+  },
+});
+
+// Used for Agent conversation context
 export const getRecentMessages = query({
   args: {
-    conversationId: v.id('conversations'),
+    conversationId: v.id("conversations"),
     limit: v.optional(v.number()),
   },
-
   handler: async (ctx, args) => {
+
     const messages = await ctx.db
-      .query('messages')
-      .withIndex('by_conversation', (q) => q.eq('conversationId', args.conversationId))
-      .order('asc')
+      .query("messages")
+      .withIndex("by_conversation", (q) =>
+        q.eq("conversationId", args.conversationId)
+      )
+      .order("asc")
       .collect();
 
     const limit = args.limit ?? 10;
-
     return messages.slice(-limit);
   },
 });
 
-// Used for Agent for update conversation title
+// Used for Agent to update conversation title
 export const updateConversationTitle = mutation({
   args: {
-    conversationId: v.id('conversations'),
+    conversationId: v.id("conversations"),
     title: v.string(),
   },
+   handler: async (ctx, args) => {
 
-  handler: async (ctx, args) => {
     await ctx.db.patch(args.conversationId, {
       title: args.title,
       updatedAt: Date.now(),
     });
-  },
+   },
 });
 
-
-// Used for Agent "List Files" tool
+// Used for Agent "ListFiles" tool
 export const getProjectFiles = query({
   args: {
-    projectId: v.id('projects'),
+    projectId: v.id("projects"),
   },
-
   handler: async (ctx, args) => {
+
     return await ctx.db
-      .query('files')
-      .withIndex('by_project', (q) => q.eq('projectId', args.projectId))
+      .query("files")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
       .collect();
   },
 });
 
-// Used for Agent "Read Files" tool
+// Used for Agent "ReadFiles" tool
 export const getFileById = query({
   args: {
-    fileId: v.id('files'),
+    fileId: v.id("files"),
   },
-
   handler: async (ctx, args) => {
+
     return await ctx.db.get(args.fileId);
   },
 });
 
-// Used for Agent "Update Files" tool
+// Used for Agent "UpdateFile" tool
 export const updateFile = mutation({
   args: {
-    fileId: v.id('files'),
+    fileId: v.id("files"),
     content: v.string(),
   },
-
   handler: async (ctx, args) => {
+
     const file = await ctx.db.get(args.fileId);
 
     if (!file) {
-      throw new Error('File not found');
+      throw new Error("File not found");
     }
 
     await ctx.db.patch(args.fileId, {
@@ -173,33 +172,36 @@ export const updateFile = mutation({
   },
 });
 
-// Used for Agent "Create File" tool
+// Used for Agent "CreateFile" tool
 export const createFile = mutation({
   args: {
-    projectId: v.id('projects'),
+    projectId: v.id("projects"),
     name: v.string(),
     content: v.string(),
-    parentId: v.optional(v.id('files')),
+    parentId: v.optional(v.id("files")),
   },
-
   handler: async (ctx, args) => {
-    const files = await ctx.db.query('files').withIndex('by_project_parent', (q) => q
-      .eq('projectId', args.projectId)
-      .eq('parentId', args.parentId))
+    const files = await ctx.db
+      .query("files")
+      .withIndex("by_project_parent", (q) =>
+        q.eq("projectId", args.projectId).eq("parentId", args.parentId)
+      )
       .collect();
 
-    const existing = files.find((file) => file.name === args.name && file.type === 'file');
+    const existing = files.find(
+      (file) => file.name === args.name && file.type === "file"
+    );
 
     if (existing) {
-      throw new Error('File already exists');
+      throw new Error("File already exists");
     }
 
-    const fileId = await ctx.db.insert('files', {
+    const fileId = await ctx.db.insert("files", {
       projectId: args.projectId,
-      parentId: args.parentId,
       name: args.name,
-      type: 'file',
       content: args.content,
+      type: "file",
+      parentId: args.parentId,
       updatedAt: Date.now(),
     });
 
@@ -207,82 +209,86 @@ export const createFile = mutation({
   },
 });
 
-// Used for Agent bulk "Create File" tool
+// Used for Agent bulk "CreateFiles" tool
 export const createFiles = mutation({
   args: {
-    projectId: v.id('projects'),
-    parentId: v.optional(v.id('files')),
-    files: v.array(v.object({
-      name: v.string(),
-      content: v.string(),
-    })),
+    projectId: v.id("projects"),
+    parentId: v.optional(v.id("files")),
+    files: v.array(
+      v.object({
+        name: v.string(),
+        content: v.string(),
+      })
+    ),
   },
-
   handler: async (ctx, args) => {
-    const existingFiles = await ctx.db.query('files')
-      .withIndex('by_project_parent', (q) => q
-        .eq('projectId', args.projectId)
-        .eq('parentId', args.parentId))
+    const existingFiles = await ctx.db
+      .query("files")
+      .withIndex("by_project_parent", (q) =>
+        q.eq("projectId", args.projectId).eq("parentId", args.parentId)
+      )
       .collect();
 
-    const result: { name: string; fileId: string; error?: string }[] = [];
+    const results: { name: string; fileId: string; error?: string }[] = [];
 
     for (const file of args.files) {
-      const existing = existingFiles.find((f) => f.name === file.name && f.type === 'file');
+      const existing = existingFiles.find(
+        (f) => f.name === file.name && f.type === "file"
+      );
 
       if (existing) {
-        result.push({
+        results.push({
           name: file.name,
           fileId: existing._id,
-          error: 'File already exists',
+          error: "File already exists",
         });
         continue;
       }
 
-      const fileId = await ctx.db.insert('files', {
+      const fileId = await ctx.db.insert("files", {
         projectId: args.projectId,
-        parentId: args.parentId,
         name: file.name,
-        type: 'file',
         content: file.content,
+        type: "file",
+        parentId: args.parentId,
         updatedAt: Date.now(),
       });
 
-      result.push({
-        name: file.name,
-        fileId: fileId,
-      });
+      results.push({ name: file.name, fileId });
     }
 
-    return result;
+    return results;
   },
 });
 
-// Used for Agent "Create Folder" tool
+// Used for Agent "CreateFolder" tool
 export const createFolder = mutation({
   args: {
-    projectId: v.id('projects'),
+    projectId: v.id("projects"),
     name: v.string(),
-    parentId: v.optional(v.id('files')),
+    parentId: v.optional(v.id("files")),
   },
-
   handler: async (ctx, args) => {
-    const files = await ctx.db.query('files').withIndex('by_project_parent', (q) => q
-      .eq('projectId', args.projectId)
-      .eq('parentId', args.parentId))
+    const files = await ctx.db
+      .query("files")
+      .withIndex("by_project_parent", (q) =>
+        q.eq("projectId", args.projectId).eq("parentId", args.parentId)
+      )
       .collect();
 
-    const existing = files.find((file) => file.name === args.name && file.type === 'folder');
+    const existing = files.find(
+      (file) => file.name === args.name && file.type === "folder"
+    );
 
     if (existing) {
-      throw new Error('Folder already exists');
+      throw new Error("Folder already exists");
     }
 
-    const fileId = await ctx.db.insert('files', {
+    const fileId = await ctx.db.insert("files", {
       projectId: args.projectId,
-      parentId: args.parentId,
       name: args.name,
-      type: 'file',
+      type: "folder",
+      parentId: args.parentId,
       updatedAt: Date.now(),
     });
 
@@ -290,31 +296,36 @@ export const createFolder = mutation({
   },
 });
 
-// Used for Agent "Rename File" tool
+// Used for Agent "RenameFile" tool
 export const renameFile = mutation({
   args: {
-    fileId: v.id('files'),
+    fileId: v.id("files"),
     newName: v.string(),
   },
-
   handler: async (ctx, args) => {
-    const file = await ctx.db.get(args.fileId);
 
+    const file = await ctx.db.get(args.fileId);
     if (!file) {
-      throw new Error('File not found');
+      throw new Error("File not found");
     }
 
-    const siblings = await ctx.db.query('files').withIndex('by_project_parent', (q) => q
-      .eq('projectId', file.projectId)
-      .eq('parentId', file.parentId))
+    // Check if a file with the new name already exists in the same parent folder
+    const siblings = await ctx.db
+      .query("files")
+      .withIndex("by_project_parent", (q) =>
+        q.eq("projectId", file.projectId).eq("parentId", file.parentId)
+      )
       .collect();
 
-    const existing = siblings.find((sibling) => sibling.name === args.newName &&
-      sibling.type === file.type &&
-      sibling._id !== args.fileId);
+    const existing = siblings.find(
+      (sibling) =>
+        sibling.name === args.newName &&
+        sibling.type === file.type &&
+        sibling._id !== args.fileId
+    );
 
     if (existing) {
-      throw new Error(`A ${file.type} "${args.newName}" already exists`);
+      throw new Error(`A ${file.type} named "${args.newName}" already exists`);
     }
 
     await ctx.db.patch(args.fileId, {
@@ -326,30 +337,33 @@ export const renameFile = mutation({
   },
 });
 
-// Used for Agent "Delete File" tool
+// Used for Agent "DeleteFile" tool
 export const deleteFile = mutation({
   args: {
-    fileId: v.id('files'),
+    fileId: v.id("files"),
   },
-
   handler: async (ctx, args) => {
-    const file = await ctx.db.get(args.fileId);
 
+     const file = await ctx.db.get(args.fileId);
     if (!file) {
-      throw new Error('File not found');
+      throw new Error("File not found");
     }
 
-    const deleteRecursive = async (fileId: Id<'files'>) => {
+    // Recursively delete file/folder and all descendants
+    const deleteRecursive = async (fileId: typeof args.fileId) => {
       const item = await ctx.db.get(fileId);
 
       if (!item) {
         return;
       }
 
-      if (item.type === 'folder') {
-        const children = await ctx.db.query('files').withIndex('by_project_parent', (q) => q
-          .eq('projectId', item.projectId)
-          .eq('parentId', fileId))
+      // If it's a folder, delete all children first
+      if (item.type === "folder") {
+        const children = await ctx.db
+          .query("files")
+          .withIndex("by_project_parent", (q) =>
+            q.eq("projectId", item.projectId).eq("parentId", fileId)
+          )
           .collect();
 
         for (const child of children) {
@@ -357,10 +371,12 @@ export const deleteFile = mutation({
         }
       }
 
+      // Delete storage file if it exists
       if (item.storageId) {
         await ctx.storage.delete(item.storageId);
       }
 
+      // Delete the file/folder itself
       await ctx.db.delete(fileId);
     };
 
@@ -372,13 +388,17 @@ export const deleteFile = mutation({
 
 export const cleanup = mutation({
   args: {
-    projectId: v.id('projects'),
+    projectId: v.id("projects"),
   },
-
   handler: async (ctx, args) => {
-    const files = await ctx.db.query('files').withIndex('by_project', (q) => q.eq('projectId', args.projectId)).collect();
+
+    const files = await ctx.db
+      .query("files")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .collect();
 
     for (const file of files) {
+      // Delete storage file if it exists
       if (file.storageId) {
         await ctx.storage.delete(file.storageId);
       }
@@ -386,113 +406,111 @@ export const cleanup = mutation({
       await ctx.db.delete(file._id);
     }
 
-    return { deletedFiles: files.length };
-  }
+    return { deleted: files.length };
+  },
 });
 
 export const generateUploadUrl = mutation({
   args: {},
-
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
     return await ctx.storage.generateUploadUrl();
   },
 });
 
 export const createBinaryFile = mutation({
   args: {
-    projectId: v.id('projects'),
+    projectId: v.id("projects"),
     name: v.string(),
-    storageId: v.id('_storage'),
-    parentId: v.optional(v.id('files')),
+    storageId: v.id("_storage"),
+    parentId: v.optional(v.id("files")),
   },
-
   handler: async (ctx, args) => {
-    const files = await ctx.db.query('files').withIndex('by_project_parent', (q) => q
-      .eq('projectId', args.projectId)
-      .eq('parentId', args.parentId))
+    const files = await ctx.db
+      .query("files")
+      .withIndex("by_project_parent", (q) =>
+        q.eq("projectId", args.projectId).eq("parentId", args.parentId)
+      )
       .collect();
 
-    const existing = files.find((file) => file.name === args.name && file.type === 'file');
+    const existing = files.find(
+      (file) => file.name === args.name && file.type === "file"
+    );
 
     if (existing) {
-      throw new Error('File already exists');
+      throw new Error("File already exists");
     }
 
-    const fileId = await ctx.db.insert('files', {
+    const fileId = await ctx.db.insert("files", {
       projectId: args.projectId,
       name: args.name,
-      type: 'file',
-      parentId: args.parentId,
+      type: "file",
       storageId: args.storageId,
+      parentId: args.parentId,
       updatedAt: Date.now(),
     });
-
+    
     return fileId;
   },
 });
 
 export const updateImportStatus = mutation({
   args: {
-    projectId: v.id('projects'),
-    status: v.union(
-      v.literal('importing'),
-      v.literal('completed'),
-      v.literal('failed'),
+    projectId: v.id("projects"),
+    status: v.optional(
+      v.union(
+        v.literal("importing"),
+        v.literal("completed"),
+        v.literal("failed")
+      )
     ),
   },
-
   handler: async (ctx, args) => {
     await ctx.db.patch("projects", args.projectId, {
       importStatus: args.status,
       updatedAt: Date.now(),
     });
-
-    return args.projectId;
   },
 });
 
 export const updateExportStatus = mutation({
   args: {
-    projectId: v.id('projects'),
-    status: v.optional(v.union(
-      v.literal('exporting'),
-      v.literal('completed'),
-      v.literal('failed'),
-      v.literal('cancelled'),
-    )),
+    projectId: v.id("projects"),
+    status: v.optional(
+      v.union(
+        v.literal("exporting"),
+        v.literal("completed"),
+        v.literal("failed"),
+        v.literal("cancelled")
+      )
+    ),
     repoUrl: v.optional(v.string()),
   },
-
   handler: async (ctx, args) => {
     await ctx.db.patch("projects", args.projectId, {
       exportStatus: args.status,
       exportRepoUrl: args.repoUrl,
       updatedAt: Date.now(),
     });
-
-    return args.projectId;
   },
 });
 
-export const getProjectFilesWithUrls = mutation({
+export const getProjectFilesWithUrls = query({
   args: {
-    projectId: v.id('projects'),
+    projectId: v.id("projects"),
   },
-
   handler: async (ctx, args) => {
-    const files = await ctx.db.query('files').withIndex('by_project', (q) => q.eq('projectId', args.projectId)).collect();
+
+    const files = await ctx.db
+      .query("files")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .collect();
 
     return await Promise.all(
       files.map(async (file) => {
         if (file.storageId) {
           const url = await ctx.storage.getUrl(file.storageId);
-
-          return {
-            ...file,
-            storageUrl: url,
-          };
+          return { ...file, storageUrl: url };
         }
-
         return { ...file, storageUrl: null };
       })
     );
@@ -500,18 +518,45 @@ export const getProjectFilesWithUrls = mutation({
 });
 
 export const createProject = mutation({
-    args: {
-        name: v.string(),
-        ownerId: v.string(),
-    },
-    handler: async (ctx, args) => {
-        const projectId = await ctx.db.insert("projects", {
-            name: args.name,
-            ownerId: args.ownerId,
-            updatedAt: Date.now(),
-            importStatus: 'importing',
-        });
+  args: {
+    name: v.string(),
+    ownerId: v.string(),
+  },
+  handler: async (ctx, args) => {
 
-        return projectId;
-    }
+    const projectId = await ctx.db.insert("projects", {
+      name: args.name,
+      ownerId: args.ownerId,
+      updatedAt: Date.now(),
+      importStatus: "importing",
+    });
+
+    return projectId;
+  },
+});
+
+export const createProjectWithConversation = mutation({
+  args: {
+    projectName: v.string(),
+    conversationTitle: v.string(),
+    ownerId: v.string(),
+  },
+  handler: async (ctx, args) => {
+
+    const now = Date.now();
+
+    const projectId = await ctx.db.insert("projects", {
+      name: args.projectName,
+      ownerId: args.ownerId,
+      updatedAt: now,
+    });
+
+    const conversationId = await ctx.db.insert("conversations", {
+      projectId,
+      title: args.conversationTitle,
+      updatedAt: now,
+    });
+
+    return { projectId, conversationId };
+  },
 });
