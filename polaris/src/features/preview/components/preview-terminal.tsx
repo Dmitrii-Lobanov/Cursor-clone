@@ -1,77 +1,82 @@
-import "@xterm/xterm/css/xterm.css";
+"use client";
+
 import { useEffect, useRef } from "react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 
-interface Props {
-    output: string;
+import "@xterm/xterm/css/xterm.css";
+
+interface PreviewTerminalProps {
+  output: string;
 }
 
-export const PreviewTerminal = ({ output }: Props) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const terminalRef = useRef<Terminal | null>(null);
-    const fitAddonRef = useRef<FitAddon | null>(null);
-    const lastLengthRef = useRef<number>(0);
+export const PreviewTerminal = ({ output }: PreviewTerminalProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const terminalRef = useRef<Terminal | null>(null);
+  const fitAddonRef = useRef<FitAddon | null>(null);
+  const lastLengthRef = useRef(0);
 
-    useEffect(() => {
-        if (!containerRef.current || !terminalRef.current) return;
+  // Initialize terminal
+  useEffect(() => {
+    if (!containerRef.current || terminalRef.current) return;
 
-        const terminal = new Terminal({
-            convertEol: true,
-            disableStdin: true,
-            fontSize: 12,
-            fontFamily: 'monospace',
-            theme: { background: '#1f2228' },
-        });
+    const terminal = new Terminal({
+      convertEol: true,
+      disableStdin: true,
+      fontSize: 12,
+      fontFamily: "monospace",
+      theme: { background: "#1f2228" },
+    });
 
-        const fitAddon = new FitAddon();
+    const fitAddon = new FitAddon();
+    terminal.loadAddon(fitAddon);
+    terminal.open(containerRef.current);
 
-        terminal.loadAddon(fitAddon);
+    terminalRef.current = terminal;
+    fitAddonRef.current = fitAddon;
 
-        terminal.open(containerRef.current);
+    // Write existing output on mount
+    if (output) {
+      terminal.write(output);
+      lastLengthRef.current = output.length;
+    }
 
-        terminalRef.current = terminal;
-        fitAddonRef.current = fitAddon;
+    requestAnimationFrame(() => fitAddon.fit());
 
-        if (output) {
-            terminal.write(output);
-            lastLengthRef.current = output.length;
-        }
+    const resizeObserver = new ResizeObserver(() => fitAddon.fit());
+    resizeObserver.observe(containerRef.current);
 
-        requestAnimationFrame(() => fitAddon.fit());
+    return () => {
+      resizeObserver.disconnect();
+      terminal.dispose();
+      terminalRef.current = null;
+      fitAddonRef.current = null;
+    };
+    // "output" does not need to be a dependency since it is not intended
+    // to update anything, just used on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-        const resizeObserver = new ResizeObserver(() => fitAddon.fit());
+  // Write output
+  useEffect(() => {
+    if (!terminalRef.current) return;
 
-        resizeObserver.observe(containerRef.current);
+    if (output.length < lastLengthRef.current) {
+      terminalRef.current.clear();
+      lastLengthRef.current = 0;
+    }
 
-        return () => {
-            resizeObserver.disconnect();
-            terminal.dispose();
-            terminalRef.current = null;
-            fitAddonRef.current = null;
-        };
+    const newData = output.slice(lastLengthRef.current);
+    if (newData) {
+      terminalRef.current.write(newData);
+      lastLengthRef.current = output.length;
+    }
+  }, [output]);
 
-        // Output is used on mount and doesn't need to be updated
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-    useEffect(() => {
-        if (!terminalRef.current) return;
-
-        if (output.length < lastLengthRef.current) {
-            terminalRef.current.clear();
-            lastLengthRef.current = 0;
-        }
-
-        const newData = output.slice(lastLengthRef.current);
-
-        if (newData) {
-            terminalRef.current.write(newData);
-            lastLengthRef.current = output.length;
-        }
-    }, [output]);
-
-    return (
-        <div ref={containerRef} className={`flex-1 min-h-0 p-3 [&_.xterm]:h-full! [&_.xterm_viewport]:h-full!
-            [&_.xterm_screen]:h-full! bg-sidebar` } />
-    )
+  return (
+    <div
+      ref={containerRef}
+      className="flex-1 min-h-0 p-3 [&_.xterm]:h-full! [&_.xterm-viewport]:h-full! [&_.xterm-screen]:h-full! bg-sidebar"
+    />
+  );
 };
