@@ -12,6 +12,7 @@ import {
   LoaderIcon,
   XCircleIcon,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -28,7 +29,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+
 import { useProject } from "../hooks/use-projects";
+
 import { Id } from "../../../../convex/_generated/dataModel";
 import Link from "next/link";
 
@@ -45,11 +48,11 @@ const formSchema = z.object({
   description: z.string().max(350, "Description is too long"),
 });
 
-interface Props {
+interface ExportPopoverProps {
   projectId: Id<"projects">;
 }
 
-export const ExportPopover = ({ projectId }: Props) => {
+export const ExportPopover = ({ projectId }: ExportPopoverProps) => {
   const project = useProject(projectId);
   const [open, setOpen] = React.useState(false);
   const { openUserProfile } = useClerk();
@@ -89,7 +92,6 @@ export const ExportPopover = ({ projectId }: Props) => {
                 onClick: () => openUserProfile(),
               },
             });
-
             setOpen(false);
             return;
           }
@@ -101,7 +103,6 @@ export const ExportPopover = ({ projectId }: Props) => {
                 onClick: () => openUserProfile(),
               },
             });
-
             setOpen(false);
             return;
           }
@@ -206,7 +207,6 @@ export const ExportPopover = ({ projectId }: Props) => {
               Export your project to a GitHub repository.
             </p>
           </div>
-
           <form.Field name="repoName">
             {(field) => {
               const isInvalid =
