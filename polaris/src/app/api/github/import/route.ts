@@ -27,11 +27,13 @@ export const POST = async (request: Request) => {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-//   const hasPro = has({ plan: "pro" });
+  // Billing
+  // Check if has Pro Plan
+  // const hasPro = has({ plan: "pro" });
 
-//   if (!hasPro) {
-//     return NextResponse.json({ error: "Pro plan required" }, { status: 403 });
-//   }
+  // if (!hasPro) {
+  //   return NextResponse.json({ error: "Pro plan required" }, { status: 403 });
+  // }
 
   const body = await request.json();
   const { url } = requestSchema.parse(body);
