@@ -178,7 +178,7 @@ export const ConversationSidebar = ({ projectId }: Props) => {
                     >
                         <PromptInputBody>
                             <PromptInputTextarea
-                                placeholder="Ask Polaris anything..."
+                                placeholder="Ask Polaris anything... (the AI requests limited by Gemini free quota. So if you don't get responses, do not worry. My free quota will be reset in 24 hours)"
                                 onChange={(e) => setInput(e.target.value)}
                                 value={input}
                                 disabled={isProcessing}
