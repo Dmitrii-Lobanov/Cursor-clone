@@ -1,0 +1,338 @@
+# Polaris - Web-based IDE & AI Code Editor
+
+[Project URL](https://cursor-clone-delta.vercel.app/)
+
+## About The Project
+
+Polaris is an advanced, web-based in-browser Integrated Development Environment (IDE) that closely resembles modern AI-powered code editors like Cursor. It features a fully functional code editor, terminal, file tree, and an integrated AI assistant capable of code generating, suggesting, and conversational interactions.
+
+### Built With (Technologies & Frameworks)
+
+**Core Frameworks & UI**
+- **[Next.js](https://nextjs.org/)** (v16.1.1) - The React framework
+- **[React](https://react.dev/)** (v19.2.3)
+- **[Tailwind CSS](https://tailwindcss.com/)** (v4) & **[shadcn/ui](https://ui.shadcn.com/)** - UI component system
+- **[Zustand](https://zustand-demo.pmnd.rs/)** - State management
+
+**Backend, Database & Auth**
+- **[Clerk](https://clerk.com/)** - Authentication
+- **[Convex](https://www.convex.dev/)** - Real-time Database and Backend
+- **[Inngest](https://www.inngest.com/)** - Background jobs, AI workflows, and agent handling
+
+**AI & Scraping**
+- **[Vercel AI SDK](https://sdk.vercel.ai/)** - Connecting to Anthropic and Google generative models
+- **[Firecrawl](https://www.firecrawl.dev/)** - Web scraping to provide up-to-date context to the AI
+
+**IDE Features (Editor & Terminal)**
+- **[CodeMirror](https://codemirror.net/)** - Code editor component supporting multiple languages and themes
+- **[WebContainer API](https://webcontainers.io/)** - Full-stack Node.js environment running directly in the browser
+- **[Xterm.js](https://xtermjs.org/)** - Terminal emulator integrated with the WebContainer environment
+- **[Octokit](https://github.com/octokit)** - GitHub API client for repository import/export
+
+# Steps
+
+## Project Setup
+
+1. Install Next.js
+
+`npx create-next-app@latest`
+
+2. Install `shadcn`
+
+`npx shadcn@latest init`
+
+3. Add shadcn components
+
+`npx shadcn@3.6.2 add --all`
+
+4. Add theme provider
+
+   Create a `src/components/theme-provider.tsx` with a `ThemeProvider` component from `next-themes`
+
+   Add `ThemeProvider` from `src/components/theme-provider.tsx` to `src/app/layout.tsx`
+
+5. Change default fonts in `src/app/layout.tsx`
+
+6. Update `src/app/globals.css`
+
+## Authentication
+
+1. Create a new project on `clerk`
+
+`https://dashboard.clerk.com/apps/new`
+
+Choose `Github` in Sign in options
+
+2. Install `clerk`
+
+`npm install @clerk/nextjs`
+
+3. Set Clerk API keys
+
+Add Clerk API keys to `.env`
+
+4. Add Clerk proxy to `src/proxy.ts`
+
+5. Wrap all content of `src/app/layout.tsx` in `ClerkProvider`
+
+6. Add Clerk components to `src/app/layout.tsx`
+
+7. Install and use Clerk themes
+
+`npm i @clerk/themes`
+
+## Database setup
+
+1. Install `Convex`
+
+`npx install convex`
+
+2. Run Convex in dev mode
+
+`npx convex dev`
+
+3. Move Clerk environment variables from `.env` to `.env.local` and delete `.env`
+
+4. Create sample data for your database in `sampleData.jsonl`
+
+5. Add the sample data to your database
+
+`npx convex import --table tasks sampleData.jsonl`
+
+6. Expose a database query
+
+Create a `convex/tasks.ts`
+
+7. Create a client component for the Convex provider
+
+8. Wire up the ConvexClientProvider
+
+9. Display the data in your app
+
+10. Create a database schema at `convex/schema.ts`
+
+11. Remove `convex/tasks.ts` (because we doesn't need it anymore)
+
+12. Create a `convex/projects.ts`
+
+13. Add new API calls to `src/app/page.tsx`
+
+14. Connect Clerk to Convex in order to secure data on sign out
+
+[Clerk Docs](https://docs.convex.dev/auth/clerk)
+
+Add new template on `dashboard.clerk.com` -> Configure -> Sessions -> JWT Templates
+
+Click Add new template
+
+15. Add all environment variables to Convex environment variables
+
+On `https://dashboard.convex.dev/` select Settings -> Environment variables and copy all `.env.local` into it
+
+16. Configure Convex with the Clerk issuer domain by creating `convex/auth.config.ts`
+
+17. Configure ConvexProviderWithClerk
+
+Create `src/components/providers.tsx`
+
+Delete `src/components/convex-client-provider.tsx`
+
+## Background Jobs
+
+1. Install AI SDK
+
+`npm i ai`
+
+2. Choose AI SDK Provider
+
+Use Google Provider (it's free)
+
+`npm install @ai-sdk/google`
+
+3. Create a demo route
+
+`src/app/api/demo/blocking/route.ts`
+
+4. In Google AI Studio create a new project `polaris-dev` and create an API key
+
+5. Create a simple page to try Google AI SDK
+
+`src/app/demo/page.tsx`
+
+6. For non-blocking UI use `Inngest`
+
+`npm install inngest`
+
+Run the Inngest Dev Server
+
+`npx --ignore-scripts=false inngest-cli@latest dev`
+
+Create an Inngest client
+
+Create `src/inngest/client.ts`
+
+Create a inngest route in `src/app/api/inngest/route.ts`
+
+Create a function `src/inngest/functions.ts` and add it to `src/app/api/inngest/route.ts`
+
+Create a request that doesn'tb block the interface `src/app/api/demo/background/route.ts`
+
+7. Implement Anthropic Provider (it's paid, but much better)
+
+`npm install @ai-sdk/anthropic`
+
+## Firecrawl AI for up-to-date responses with web scraping
+
+1. Install Firecrawl
+   `npm i @mendable/firecrawl-js`
+
+2. Instatiate Firecrawl in `src/lib/firecrawl.ts`
+
+## Error Tracking
+
+1. In `src/app/demo/page.tsx` add error handler for client, API and Inngest
+
+2. Add a project in Sentry
+
+3. For Inngest Sentry logging add Inngest Sentry middleware
+
+`npm i @inngest/middleware-sentry`
+
+## Projects
+
+1. Clean up the pproject from the demo code
+
+2. Update convex schema at `convex/schema.ts`
+
+3. Delete all the database data in Convex dashboard `https://dashboard.convex.dev`
+
+4. Modify API requests
+
+5. Add UI components
+
+## IDE Layout
+
+1. Create an UI components for nav bar
+
+2. Create an UI for main content
+
+Use split-pane component using `allotment`
+
+Create a Conversation sidebar
+
+For main content create two tabs: Code and Preview
+
+## File Explorer
+
+1. Add files schema to convex schema
+
+2. Add UI for File Explorer
+
+Use `@react-symbols/icons` for creating files and folders with appropriate file/folder icons
+
+3. Add a folder tree
+
+## Code Editor State
+
+1. Install `Zustand` as the state manager
+
+2. Create UI for code editor tabs
+
+3. Create UI for code editor
+
+Install `codemirror`
+
+Install `@codemirror/lang-javascript`
+
+Install `@codemirror/view`
+
+Install `@codemirror/theme-one-dark` for dark theme
+
+Create an extension for editor theme
+
+Implement smart recognizer for code syntax
+
+Create an extension for language recognizing
+
+Install packages:
+`@codemirror/lang-html`
+`@codemirror/lang-css`
+`@codemirror/lang-json`
+`@codemirror/lang-markdown`
+`@codemirror/lang-python`
+
+Adjust code indentation
+
+Install `@codemirror/commands`
+
+Add a minimap
+
+Install `@replit/codemirror-minimap`
+
+Add a depth of indentation
+
+Install `@replit/codemirror-indentation-markers`
+
+Add a saving file functionality
+
+## AI Features
+
+1. Add a suggestion extension
+
+2. Create an API request for AI suggestions
+
+3. Install `ky` as a fetch framework (lightweight alternative to `axios`)
+
+## Conversation System
+
+1. Add a conversation schema
+
+2. Add a messages schema
+
+3. Add API requests
+
+4. Create a Conversation Sidebar UI
+
+Install `npx shadcn@latest add @ai-elements/all`
+
+## AI Agent Tools
+
+Install Inngest Agent Kit
+
+`npm i @inngest/agent-kit`
+
+## Webcontainers, Terminal & Preview
+
+1. Install Webcontainers
+
+`npm i @webcontainer/api @xterm/xterm @xterm/addon-fit`
+
+Configure Cross-Origin Isolation
+
+Add the headers to `next.config.ts`:
+
+Update projects schema
+
+Create a File Tree utility
+
+Implement a Webcontainer Hook
+
+Implement a Terminal UI
+
+For a Settings popover we'll use `@tanstack/react-form`
+
+## Github Import Export
+
+Install `octokit` which is a GitHub client
+
+Install `isbinaryfile` which define is file binary or not
+
+Install `react-icons`
+
+Add 'Github' to connections on `Clerk` SSO Connections Page
+
+Activate Use Custom Credentials in A Github Connection
+
+Register new OAuth App on [Github](https://github.com/settings/developers)
+
+Add API requests for Github import and export
