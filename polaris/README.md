@@ -1,4 +1,33 @@
-This is a README
+# Polaris - Web-based IDE & AI Code Editor
+
+[Project URL](https://cursor-clone-delta.vercel.app/)
+
+## About The Project
+
+Polaris is an advanced, web-based in-browser Integrated Development Environment (IDE) that closely resembles modern AI-powered code editors like Cursor. It features a fully functional code editor, terminal, file tree, and an integrated AI assistant capable of code generating, suggesting, and conversational interactions.
+
+### Built With (Technologies & Frameworks)
+
+**Core Frameworks & UI**
+- **[Next.js](https://nextjs.org/)** (v16.1.1) - The React framework
+- **[React](https://react.dev/)** (v19.2.3)
+- **[Tailwind CSS](https://tailwindcss.com/)** (v4) & **[shadcn/ui](https://ui.shadcn.com/)** - UI component system
+- **[Zustand](https://zustand-demo.pmnd.rs/)** - State management
+
+**Backend, Database & Auth**
+- **[Clerk](https://clerk.com/)** - Authentication
+- **[Convex](https://www.convex.dev/)** - Real-time Database and Backend
+- **[Inngest](https://www.inngest.com/)** - Background jobs, AI workflows, and agent handling
+
+**AI & Scraping**
+- **[Vercel AI SDK](https://sdk.vercel.ai/)** - Connecting to Anthropic and Google generative models
+- **[Firecrawl](https://www.firecrawl.dev/)** - Web scraping to provide up-to-date context to the AI
+
+**IDE Features (Editor & Terminal)**
+- **[CodeMirror](https://codemirror.net/)** - Code editor component supporting multiple languages and themes
+- **[WebContainer API](https://webcontainers.io/)** - Full-stack Node.js environment running directly in the browser
+- **[Xterm.js](https://xtermjs.org/)** - Terminal emulator integrated with the WebContainer environment
+- **[Octokit](https://github.com/octokit)** - GitHub API client for repository import/export
 
 # Steps
 
@@ -307,4 +336,3 @@ Activate Use Custom Credentials in A Github Connection
 Register new OAuth App on [Github](https://github.com/settings/developers)
 
 Add API requests for Github import and export
-
